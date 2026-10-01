@@ -1,0 +1,28 @@
+---
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { defaultLocale, htmlLang } from "@/i18n/config";
+import { useTranslations } from "@/i18n";
+
+// 根路径不直接承载内容，只负责跳转到默认语言
+const target = getRelativeLocaleUrl(defaultLocale, "");
+const t = useTranslations(defaultLocale);
+---
+
+<!doctype html>
+<html lang={htmlLang[defaultLocale]}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- 跳转页不收录；canonical 与 noindex 语义冲突，这里只保留 noindex -->
+    <meta name="robots" content="noindex,follow" />
+    <meta http-equiv="refresh" content={`0;url=${target}`} />
+    <title>{t.site.title}</title>
+  </head>
+  <body>
+    <p><a id="go" href={target}>{t.site.title}</a></p>
+    <script is:inline>
+      document.getElementById("go")?.focus();
+      window.location.replace(document.getElementById("go").href);
+    </script>
+  </body>
+</html>

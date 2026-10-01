@@ -1,0 +1,50 @@
+---
+import { giscus, giscusEnabled } from "@/config/giscus";
+import { giscusLang, type Locale } from "@/i18n/config";
+import { useTranslations } from "@/i18n";
+
+interface Props {
+  locale?: Locale;
+}
+const locale = (Astro.props.locale ?? Astro.currentLocale) as Locale;
+const t = useTranslations(locale);
+---
+
+{
+  giscusEnabled && (
+    <section id="comments" class="border-border mt-12 border-t pt-8">
+      <h2 class="text-lg font-semibold">{t.post.comments}</h2>
+      <div
+        id="giscus"
+        class="mt-4"
+        data-repo={giscus.repo}
+        data-repo-id={giscus.repoId}
+        data-category={giscus.category}
+        data-category-id={giscus.categoryId}
+        data-mapping={giscus.mapping}
+        data-strict={giscus.strict}
+        data-reactions-enabled={giscus.reactionsEnabled}
+        data-emit-metadata={giscus.emitMetadata}
+        data-input-position={giscus.inputPosition}
+        data-theme={giscus.theme}
+        data-lang={giscusLang[locale]}
+        data-loading={giscus.loading}
+      />
+    </section>
+  )
+}
+
+<script>
+  // 配置齐全才注入 giscus 脚本，避免占位状态下发无用请求
+  const host = document.getElementById("giscus");
+  if (host) {
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.crossOrigin = "anonymous";
+    for (const [key, value] of Object.entries(host.dataset)) {
+      if (value) script.dataset[key] = value;
+    }
+    host.appendChild(script);
+  }
+</script>

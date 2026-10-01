@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set site environment
+        run: |
+          # 站点经自定义域名 db.o2c.fun 提供，挂在域名根路径，构建不带前缀。
+          # 若回退到 github.io 项目页部署，把 BASE_PATH 改为 "/$REPO"、
+          # SITE_URL 改为 "https://$OWNER.github.io"（REPO="$GITHUB_REPOSITORY" 的仓库名部分）。
+          echo "SITE_URL=https://db.o2c.fun" >> "$GITHUB_ENV"
+          echo "BASE_PATH=/" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

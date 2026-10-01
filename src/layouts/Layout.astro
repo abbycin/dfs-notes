@@ -1,0 +1,196 @@
+---
+import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { resolveLocaleOgImagePath } from "@/utils/resolveDefaultOgImagePath";
+import { getAssetPath, stripBase, stripLocale } from "@/utils/withBase";
+import config from "@/config";
+import {
+  defaultLocale,
+  htmlLang,
+  locales,
+  ogLocale,
+  type Locale,
+} from "@/i18n/config";
+import { useTranslations } from "@/i18n";
+import "@/styles/global.css";
+
+type Props = {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  canonicalURL?: string;
+  /**
+   * 当前页在各语言下的站内地址（含 base）。
+   * 不传时按语言前缀互换作为默认值；显式传入则以实际存在的语言版本为准，
+   * 缺项的语言不输出 hreflang（避免指向 404）。
+   */
+  alternates?: Partial<Record<Locale, string>>;
+  /** 禁止收录（404 等页面用）；不输出 canonical 与 hreflang */
+  noindex?: boolean;
+};
+
+const { site } = config;
+
+const locale = Astro.currentLocale ?? site.lang;
+const t = useTranslations(locale);
+
+const {
+  title = t.site.title,
+  description = t.site.description,
+  ogImage = resolveLocaleOgImagePath(config, locale),
+  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+  alternates,
+  noindex = false,
+} = Astro.props;
+
+const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
+// 去掉 helper 给 .xml 加的尾斜杠，否则静态服务器 404
+const rssHref = getRelativeLocaleUrl(locale, "rss.xml").replace(/\/$/, "");
+const lang = htmlLang[locale as Locale] ?? locale;
+
+// hreflang：显式 alternates 时只认真实存在的语言版本（缺项不输出，避免指向 404）；
+// 未显式传入时按语言前缀互换（首页/列表等静态页各语言均成对生成）
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+const relPath = stripLocale(stripBase(Astro.url.pathname), locale);
+const alternatePath = (target: Locale): string | undefined =>
+  alternates ? alternates[target] : `${base}/${target}${relPath}`;
+const hreflangs = locales.flatMap(target => {
+  const p = alternatePath(target);
+  return p
+    ? [
+        {
+          lang: htmlLang[target],
+          url: new URL(p, Astro.site ?? Astro.url).href,
+        },
+      ]
+    : [];
+});
+const defaultHreflang = hreflangs.find(
+  l => l.lang === htmlLang[defaultLocale]
+);
+---
+
+<!doctype html>
+<html
+  dir={site.dir ?? "ltr"}
+  lang={lang}
+  class="overflow-y-scroll scroll-smooth"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={getAssetPath("favicon.svg")} />
+    <link rel="icon" href={getAssetPath("favicon.ico")} />
+    {
+      noindex ? (
+        <meta name="robots" content="noindex,follow" />
+      ) : (
+        <link rel="canonical" href={canonicalURL} />
+      )
+    }
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Font -->
+    <Font
+      cssVariable="--font-google-sans-code"
+      preload={[{ subset: "latin", weight: 400, style: "normal" }]}
+    />
+
+    <!-- Primary meta -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta name="author" content={site.author} />
+    <link rel="sitemap" href={getAssetPath("sitemap-index.xml")} />
+
+    <!-- i18n hreflang（与 sitemap 里的 xhtml:link 保持一致） -->
+    {
+      !noindex &&
+        hreflangs.map(({ lang: hreflangLang, url }) => (
+          <link rel="alternate" hreflang={hreflangLang} href={url} />
+        ))
+    }
+    {
+      !noindex && defaultHreflang && (
+        <link rel="alternate" hreflang="x-default" href={defaultHreflang.url} />
+      )
+    }
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={t.site.title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={socialImageURL} />
+    <meta property="og:image:alt" content={t.site.title} />
+    <meta property="og:locale" content={ogLocale[locale as Locale] ?? "zh_CN"} />
+    {
+      locales
+        .filter(l => l !== locale && alternatePath(l as Locale))
+        .map(l => (
+          <meta property="og:locale:alternate" content={ogLocale[l]} />
+        ))
+    }
+
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={socialImageURL} />
+
+    <!-- RSS autodiscovery -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={t.site.title}
+      href={new URL(rssHref, Astro.site)}
+    />
+
+    <!-- Filled at runtime by theme.ts to match the current background colour -->
+    <meta name="theme-color" content="" />
+
+    <!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) -->
+    <slot name="head" />
+
+    {
+      site.googleVerification && (
+        <meta
+          name="google-site-verification"
+          content={site.googleVerification}
+        />
+      )
+    }
+
+    <!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    -->
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const theme = stored ?? (prefersDark ? "dark" : "light");
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script>
+
+    <ClientRouter />
+  </head>
+  <body
+    class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"
+  >
+    <slot />
+    <script>
+      import "@/scripts/theme";
+    </script>
+  </body>
+</html>

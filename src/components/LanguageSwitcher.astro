@@ -1,0 +1,52 @@
+---
+import { defaultLocale, htmlLang, localeNames, locales, type Locale } from "@/i18n/config";
+import { useTranslations } from "@/i18n";
+import { stripBase, stripLocale } from "@/utils/withBase";
+
+interface Props {
+  /** 当前页在各语言下的地址；缺项表示该语言版本不存在（对应按钮禁用） */
+  alternates?: Partial<Record<Locale, string>>;
+}
+const { alternates } = Astro.props;
+
+const locale = (Astro.currentLocale ?? defaultLocale) as Locale;
+const t = useTranslations(locale);
+const targets = locales.filter(l => l !== locale);
+
+// 没有显式 alternates 时退化为「替换地址里的语言前缀」
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+const relPath = stripLocale(stripBase(Astro.url.pathname), locale);
+const hrefFor = (target: Locale) =>
+  alternates?.[target] ?? `${base}/${target}${relPath}`;
+const available = (target: Locale) =>
+  alternates ? Boolean(alternates[target]) : true;
+---
+
+<div
+  class="flex items-center gap-1"
+  role="group"
+  aria-label={t.a11y.switchLang}
+>
+  {
+    targets.map(target =>
+      available(target) ? (
+        <a
+          href={hrefFor(target)}
+          hreflang={htmlLang[target]}
+          class="focus-outline rounded-md px-2 py-1 text-sm hover:text-accent"
+          title={localeNames[target]}
+        >
+          {localeNames[target]}
+        </a>
+      ) : (
+        <span
+          aria-disabled="true"
+          title={t.post.noTranslation}
+          class="cursor-not-allowed rounded-md px-2 py-1 text-sm opacity-50"
+        >
+          {localeNames[target]}
+        </span>
+      )
+    )
+  }
+</div>
