@@ -27,7 +27,7 @@ export default defineAstroPaperConfig({
     showBackButton: true,
     editPost: {
       enabled: true,
-      url: "https://github.com/abbycin/dfs-notes/edit/master/",
+      url: "https://github.com/abbycin/dfs-notes/edit/dev/",
     },
     search: "pagefind",
   },

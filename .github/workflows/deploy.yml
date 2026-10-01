@@ -2,7 +2,9 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [master]
+    # 日常写作与部署分支。GitHub 贡献图只统计默认分支（master）的提交，
+    # 日常高频提交放这里不会出现在活动日历；master 仅作发布快照（squash 同步）。
+    branches: [dev]
   workflow_dispatch:
 
 permissions:

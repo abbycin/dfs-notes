@@ -183,9 +183,9 @@ public/
 
 ## 部署到 GitHub Pages
 
-1. 推送仓库到 GitHub（默认分支 `master`）；
+1. 推送仓库到 GitHub（默认分支 `master`，日常写作与部署在 `dev` 分支）；
 2. 仓库 **Settings → Pages → Build and deployment** 中，**Source** 选 **GitHub Actions**；
-3. push 到 `master` 会自动构建并发布，`.github/workflows/deploy.yml` 已处理：
+3. push 到 `dev` 会自动构建并发布（`.github/workflows/deploy.yml` 只监听 `dev`，不监听 `master`）：
    - 自定义域名 `db.o2c.fun` → 挂在域名根路径（`BASE_PATH=/`，产物无前缀）
    - 如需回退 github.io 项目页（`https://<user>.github.io/<repo>/`），把 workflow 里
      `BASE_PATH` 改回 `/<仓库名>`、`SITE_URL` 改回 `https://<user>.github.io`
@@ -193,6 +193,11 @@ public/
    `SITE_URL` 与 `BASE_PATH` 在 workflow 里固定设置；本地不设置时按根路径构建，
    站点地址取 `astro-paper.config.ts` 的 `site.url`（默认 `https://db.o2c.fun`）。
    构建包含 Pagefind 索引步骤，搜索开箱即用。
+
+   **分支与贡献图**：GitHub 贡献图只统计默认分支（`master`）的提交，`dev` 上的
+   日常提交不会出现在活动日历。要把发布内容同步回 `master` 时用
+   `git merge --squash dev` 生成单个提交后再提交（普通 `git merge` 会让 dev 的
+   全部提交进入默认分支并被回头计账）。
 
 4. 本地想覆盖站点地址（用于 canonical / og:url）：
 
