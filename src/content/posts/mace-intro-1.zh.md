@@ -6,7 +6,7 @@ tags:
   - mace-internal
 ---
 
-mace 是我在 2024 年开始编写的一个 key-value 数据库。它的出现绕不开 [junkfs](https://github.com/abbycin/junkfs) 这个 FUSE 文件系统的练手项目。在我的设计中，文件系统的元数据使用 key-value 数据库来存储，这些元数据包括：`inode`、`dentry`、`superblock` 等。例如文件的表示就是 `i_$ino` 作为 key，而其 value 就是序列化后的结构体，其中包括权限、大小、名字等信息
+[mace](https://github.com/abbycin/mace)（mace-kv） 是我在 2024 年开始编写的一个 key-value 数据库。它的出现绕不开 [junkfs](https://github.com/abbycin/junkfs) 这个 FUSE 文件系统的练手项目。在我的设计中，文件系统的元数据使用 key-value 数据库来存储，这些元数据包括：`inode`、`dentry`、`superblock` 等。例如文件的表示就是 `i_$ino` 作为 key，而其 value 就是序列化后的结构体，其中包括权限、大小、名字等信息
 
 一开始，这个文件系统还是用 C++ 写的，但考虑到依赖管理和测试的需要，不久就转向了 Rust。最早在 key-value 数据库选型时，考虑过 rocksdb，但由于它在 Rust 的绑定太重了，vim 打开都会卡死，并且我从来没有成功地把它编译出来，于是选择了名气较大的 sled 作为替代。但一段时间后我发现了 sled 的问题：1. 它非常占用空间。2. 它的事务很难用。3. 它其实很久都不更新了。
 

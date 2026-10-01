@@ -6,7 +6,7 @@ tags:
   - mace-internal
 ---
 
-mace is a key-value database I started writing in 2024. It could not have appeared out of nowhere: it grew out of [junkfs](https://github.com/abbycin/junkfs), my practice project for a FUSE filesystem. In my design the filesystem's metadata is stored in a key-value database, and that metadata includes `inode`, `dentry`, `superblock` and so on. A file, for example, is represented by using `i_$ino` as the key, while its value is the serialized struct, holding the permissions, size, name and other fields.
+[mace](https://github.com/abbycin/mace) (mace-kv) is a key-value database I started writing in 2024. It could not have appeared out of nowhere: it grew out of [junkfs](https://github.com/abbycin/junkfs), my practice project for a FUSE filesystem. In my design the filesystem's metadata is stored in a key-value database, and that metadata includes `inode`, `dentry`, `superblock` and so on. A file, for example, is represented by using `i_$ino` as the key, while its value is the serialized struct, holding the permissions, size, name and other fields.
 
 At first the filesystem was written in C++, but dependency management and testing pushed me to Rust fairly quickly. When I first picked a key-value database, I considered rocksdb, but its Rust bindings are too heavy — just opening vim would hang — and I never actually managed to compile it, so I settled on the more famous sled instead. After a while, though, I found sled's problems: 1. it takes up a lot of space. 2. its transactions are hard to use. 3. it really hasn't been updated for a long time.
 

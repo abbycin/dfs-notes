@@ -6,7 +6,7 @@ tags:
   - btree-store-release
 ---
 
-After about a month of work, btree-store is at 2.0. There are two things this release is about: 1. stronger reliability, and 2. maintaining the database.
+After about a month of work, [btree-store](https://crates.io/crates/btree-store) is at 2.0. There are two things this release is about: 1. stronger reliability, and 2. maintaining the database.
 
 ## Stronger reliability
 
