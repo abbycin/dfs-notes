@@ -19,12 +19,12 @@
  */
 export const giscus = {
   /** 例：'your-name/dfs-notes'（必须是 **公开** 且开启了 Discussions 的仓库） */
-  repo: '',
-  repoId: '',
+  repo: 'abbycin/dfs-notes',
+  repoId: 'R_kgDOU2zWSA',
 
   /** 例：'Announcements' */
-  category: '',
-  categoryId: '',
+  category: 'General',
+  categoryId: 'DIC_kwDOU2zWSM4DG3n0',
 
   /** 页面映射方式，一般用 pathname */
   mapping: 'pathname',
