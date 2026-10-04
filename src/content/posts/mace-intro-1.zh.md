@@ -19,3 +19,5 @@ tags:
 但随着研究的深入，逐渐发现 leanstore 和 photondb 各自存在的问题，比如：leanstore 使用的是 per-worker 事务处理 + Group Commit，也就是说，你一开始就需要固定好 worker 的数据，把 worker 和 CPU 核绑定，好处是事务都是并行的，缺点是没办法扩展，并且测试发现 Group Commit 的完成通知就是写事务的瓶颈。而 photondb 也有问题，对于不断更新的 key 来说，在对 node 做 consolidation 时需要保证这些 key 在同一个 node 上，否则 Bw-Tree 的查找路由就会出错。如果一个 key 频繁地更新，会导致一个 node 的大小失控
 
 于是，mace 开始寻求改变。在此期间我阅读了 sled、surrealkv、postgresql、boltdb、leveldb 的相关实现，也读了一些 paper 和书籍（Database internals 和 Database System Concepts），在 junkfs 的需求驱动下，最终有了现在 mace 的形态
+
+![mace-arch](/images/mace-arch.jpg)
