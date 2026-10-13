@@ -74,6 +74,6 @@ export default {
   },
   site: {
     title: "DFS NOTES",
-    description: "Design, implementation, releases and pitfalls of mace and btree-store.",
+    description: "Design, implementation, releases and pitfalls of DFS — databases, filesystems and storage.",
   },
 } satisfies UIStrings;

@@ -5,7 +5,7 @@ export default defineAstroPaperConfig({
     // SITE_URL 环境变量优先（GitHub Pages workflow 注入），否则用本地默认值
     url: process.env.SITE_URL || "https://db.o2c.fun",
     title: "dfs-notes",
-    description: "mace 与 btree-store 的设计与实现、版本发布与踩坑记录",
+    description: "DFS（Database、Filesystem、Storage）的设计与实现、版本发布与踩坑记录",
     author: "AbbyCin",
     profile: "https://github.com/abbycin",
     ogImage: "default-og.jpg",

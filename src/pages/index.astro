@@ -1,28 +1,95 @@
 ---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
 import { getRelativeLocaleUrl } from "astro:i18n";
-import { defaultLocale, htmlLang } from "@/i18n/config";
 import { useTranslations } from "@/i18n";
+import config from "@/config";
 
-// 根路径不直接承载内容，只负责跳转到默认语言
-const target = getRelativeLocaleUrl(defaultLocale, "");
-const t = useTranslations(defaultLocale);
+/**
+ * 根路径落地页（类似 slatedb.io 的首页）：不再自动跳转，
+ * 而是展示站名与简介，提供中/英文版本的入口。
+ *
+ * 保留 noindex（Layout 会同时省略 canonical 与 hreflang）：
+ * 真正参与收录的是 /zh/ 与 /en/，sitemap 排除与 hreflang/x-default 布局
+ * 都不依赖本页，因此无需改动 SEO 配置。
+ */
+const locale = Astro.currentLocale ?? config.site.lang;
+const t = useTranslations(locale);
+const tzh = useTranslations("zh");
+const ten = useTranslations("en");
+
+const titleWords = t.site.title.split(" ");
+
+const entries = [
+  {
+    href: getRelativeLocaleUrl("zh", ""),
+    name: "中文",
+    meta: "zh-CN · 默认语言",
+  },
+  {
+    href: getRelativeLocaleUrl("en", ""),
+    name: "English",
+    meta: "en · English version",
+  },
+] as const;
 ---
 
-<!doctype html>
-<html lang={htmlLang[defaultLocale]}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- 跳转页不收录；canonical 与 noindex 语义冲突，这里只保留 noindex -->
-    <meta name="robots" content="noindex,follow" />
-    <meta http-equiv="refresh" content={`0;url=${target}`} />
-    <title>{t.site.title}</title>
-  </head>
-  <body>
-    <p><a id="go" href={target}>{t.site.title}</a></p>
-    <script is:inline>
-      document.getElementById("go")?.focus();
-      window.location.replace(document.getElementById("go").href);
-    </script>
-  </body>
-</html>
+<Layout noindex>
+  <Header />
+
+  <main
+    id="main-content"
+    class="app-layout flex flex-1 flex-col items-center justify-center"
+  >
+    <section class="w-full py-14 text-center">
+      <h1 class="text-5xl font-bold tracking-tight sm:text-6xl">
+        {
+          titleWords.map((word, i) => (
+            <span
+              class={i === titleWords.length - 1 ? "text-accent italic" : ""}
+            >
+              {word}
+              {i < titleWords.length - 1 ? " " : ""}
+            </span>
+          ))
+        }
+      </h1>
+
+      <p class="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg">
+        {tzh.site.description}
+      </p>
+      <p
+        class="text-muted-foreground/80 mx-auto mt-1 max-w-2xl text-base italic"
+      >
+        {ten.site.description}
+      </p>
+
+      <div
+        class="mx-auto mt-10 grid w-full max-w-2xl gap-4 text-left sm:grid-cols-2"
+      >
+        {
+          entries.map(entry => (
+            <a
+              href={entry.href}
+              class="border-border bg-muted/40 group rounded-xl border p-6 transition-colors hover:border-accent"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-2xl font-semibold">{entry.name}</span>
+                <span
+                  aria-hidden="true"
+                  class="text-muted-foreground group-hover:text-accent text-xl transition-transform group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </div>
+              <p class="text-muted-foreground mt-2 text-sm">{entry.meta}</p>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

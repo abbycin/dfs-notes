@@ -74,6 +74,6 @@ export default {
   },
   site: {
     title: "DFS NOTES",
-    description: "mace 与 btree-store 的设计与实现、版本发布与踩坑记录",
+    description: "DFS（Database、Filesystem、Storage）的设计与实现、版本发布与踩坑记录",
   },
 } satisfies UIStrings;
